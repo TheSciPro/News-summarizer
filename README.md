@@ -29,7 +29,7 @@ Uses NewsAPI.org to pull the latest global insurance news. This API acts as a wr
 ### 1️⃣ Generate API Keys and Create a Virtual Environment
 * Generate API key from your Groq account
 * Generate API key from newsapi.org
-* Add the API keys in the following format in your .env format
+* Add the API keys in the following format in your .env 
 ```
 GROQ_API_KEY =
 NEWS_API_KEY =
