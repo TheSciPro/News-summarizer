@@ -1,0 +1,111 @@
+import os
+import json
+from collections import defaultdict
+from groq import Groq
+
+
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+
+MODEL = "llama-3.3-70b-versatile"
+
+class Conversation:
+    def __init__(self):
+        self.messages = [{"role": "system", "content": "You are a business analyst generating structured reports for the insurance industry."}]
+        self.active = True
+
+conversations = {}
+
+def get_or_create_conversation(conversation_id):
+    """Create or retrieve an active conversation"""
+    if conversation_id not in conversations:
+        conversations[conversation_id] = Conversation()
+    return conversations[conversation_id]
+
+def categorize_and_summarize(text):
+    """ Categorize and summarize content using Groq API """
+    conversation = get_or_create_conversation("summarization")
+
+    prompt = f"""
+    Read the following insurance-related article and:
+    - Summarize key insights concisely.
+    - Assign it to a relevant category: Climate Risk, Regulation Changes, InsureTech, Policy Changes, or Market Trends.
+    - Highlight why it's relevant to insurers.
+
+    Article Content:
+    {text}
+
+    Structured Output:
+    - **Category**: [Choose from Climate Risk / Regulation Changes / InsureTech / Policy Changes / Market Trends]
+    - **Summary**: [Concise summary]
+    """
+
+    conversation.messages.append({"role": "user", "content": prompt})
+
+    try:
+        response = client.chat.completions.create(
+            model=MODEL,
+            messages=conversation.messages,
+            temperature=0.7,
+            max_tokens=500
+        )
+
+        return response.choices[0].message.content.strip()
+
+    except Exception as e:
+        print(f"❌ Error during summarization: {str(e)}")
+        return None
+
+# Load articles from JSON
+with open("monecsites.json", "r", encoding="utf-8") as file:
+    articles = json.load(file)
+
+# Dictionary to store summaries by category
+categorized_summaries = defaultdict(list)
+
+# Process each article
+for article in articles:
+    headline = article.get("headline", "Unknown Title")
+    link = article.get("link", "No Link Provided")
+    content = " ".join(article.get("content", []))  # Convert list to string
+
+    if not content.strip():
+        print(f"⚠️ Skipping '{headline}' - No content available.")
+        continue  # Skip empty articles
+
+    print(f"📌 Processing: {headline}")
+
+    structured_summary = categorize_and_summarize(content)
+
+    if structured_summary:
+        lines = structured_summary.split("\n")
+        category = None
+        summary = []
+
+        for line in lines:
+            if "**Category**" in line:
+                category = line.split(":")[-1].strip()
+            elif "**Summary**" in line:
+                summary.append(line.split(":")[-1].strip())
+
+        if category and summary:
+            categorized_summaries[category].extend(summary)
+            print(f"✅ Categorized under: {category}")
+        else:
+            print(f"⚠️ Could not extract category for '{headline}', skipping...")
+    else:
+        print(f"❌ Failed to process '{headline}'")
+
+# Generate structured insurance report
+report_content = "📌 INSURANCE MARKET REPORT\n" + "-"*40 + "\n\n"
+
+for category, summaries in categorized_summaries.items():
+    report_content += f"🌍 {category.upper()}\n"
+    for summary in summaries:
+        report_content += f"- {summary}\n"
+    report_content += "\n"
+
+# Save report to a text file
+with open("insurance_report.txt", "w", encoding="utf-8") as file:
+    file.write(report_content)
+
+print("✅ Report generated: insurance_report.txt")
