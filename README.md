@@ -55,6 +55,7 @@ python pipeline.py
 💡 After running, a structured summary report (report.txt) will be generated.
 
 ### Demo
+![{734E6BD0-9189-434E-9277-CF79B72D53EB}](https://github.com/user-attachments/assets/deaf1fb1-ece5-4e2c-a671-d392da04ada1)
 
 
 ## How It Works 🚀
