@@ -26,8 +26,16 @@ MoneyControl is part of the Network 18 group, owned by Reliance Group. A schedul
 Uses NewsAPI.org to pull the latest global insurance news. This API acts as a wrapper around Google News for comprehensive coverage.
 
 ## Setup & Installation
-### 1️⃣ Create a Virtual Environment
+### 1️⃣ Generate API Keys and Create a Virtual Environment
+* Generate API key from your Groq account
+* Generate API key from newsapi.org
+* Add the API keys in the following format in your .env format
+```
+GROQ_API_KEY =
+NEWS_API_KEY =
+```
 
+#### Virtual Environment
 ```python -m venv env
 source env/bin/activate   # macOS/Linux
 env\Scripts\activate      # Windows
@@ -46,6 +54,9 @@ python pipeline.py
 ```
 💡 After running, a structured summary report (report.txt) will be generated.
 
+### Demo
+
+
 ## How It Works 🚀
 This pipeline follows a multi-step process:
 
@@ -56,8 +67,48 @@ This pipeline follows a multi-step process:
 
 🔹 Reports are saved in report.txt with categorized insights!
 
+#### NOTE
+* If you want to know the source from which the report was generated add this function in your generate_insurance_report.py
+```
+# Process each article
+for article in articles:
+    headline = article.get("headline", "Unknown Title")
+    link = article.get("link", "No Link Provided")
+    content = " ".join(article.get("content", []))  # Convert list to string
+
+    if not content.strip():
+        print(f"⚠️ Skipping '{headline}' - No content available.")
+        continue  # Skip empty articles
+
+    print(f"📌 Analyzing: {headline}")
+
+    structured_summary = categorize_and_summarize(content)
+
+    if structured_summary:
+        structured_summaries.append(f"🔹 **{headline}**\n🔗 {link}\n{structured_summary}\n\n")
+        print(f"✅ Processed: {headline}")
+    else:
+        print(f"❌ Failed to process '{headline}'")
+
+# Generate structured insurance report
+report_content = (
+    "📌 **INSURANCE MARKET REPORT**\n"
+    "----------------------------------------\n\n"
+    + "\n".join(structured_summaries)
+)
+
+# Save report to a text file
+with open("insurance_report.txt", "w", encoding="utf-8") as file:
+    file.write(report_content)
+
+print("✅ Report generated: insurance_report.txt")
+```
 ### Next Steps 🚀
-* Enhance Summarization → Improve structuring using domain-specific LLM prompts.
+
+* Have multiple approaches
+    * Local LLM Integration
+    * Framework Integration
+    * Research and experimentation on different Agentic architectures
 
 * Dashboard Integration → Convert reports into real-time visual insights.
 
